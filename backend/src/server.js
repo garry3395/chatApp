@@ -2,11 +2,20 @@ import express from 'express'
 import dotenv from 'dotenv'
 import authRoutes from './routes/auth.js'
 import messageRoutes from './routes/message.js'
+import path from "path"
 
 const app=express();
+const __dirname=path.resolve()
 dotenv.config()
 app.use('/api/auth',authRoutes)
 app.use('/api/messages',messageRoutes)
+//now code for deployment 
+if(process.env.NODE_ENV==="production"){
+  app.use(express.static(path.join(__dirname,"../frontend/dist")))
+  app.get("*",(req,res)=>{
+    app.sendFile(path.join(__dirname,"../frontend/dist/index.html"))
+  })
+}
  
  
 const PORT=process.env.PORT||3000
