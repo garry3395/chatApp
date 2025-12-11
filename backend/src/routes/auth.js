@@ -1,11 +1,8 @@
 import express from 'express'
+import { signup } from '../controllers/authController.js';
 const router=express.Router();
 
-router.get('/signup',(req,res)=>{
-  console.log("signup route hit")
-  res.send("signup route hit")
-
-})
+router.get('/signup',signup)
 
 router.get('/logout',(req,res)=>{
   console.log("logout route hit")
