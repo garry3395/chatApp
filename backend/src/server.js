@@ -9,6 +9,7 @@ const __dirname=path.resolve()
 dotenv.config()
 
 //user workspace 
+
 app.use(express.json())
 app.use('/api/auth',authRoutes)
 app.use('/api/messages',messageRoutes)
