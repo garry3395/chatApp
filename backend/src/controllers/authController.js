@@ -1,5 +1,5 @@
-import { generateToken } from "../lib/utils";
-import { User } from "../models/User";
+import { generateToken } from "../lib/utils.js";
+import { User } from "../models/User.js";
 import bcrypt from "bcryptjs"
 export const signup = async (req, res) => {
   const { fullname, email, password } = req.body;
@@ -34,7 +34,7 @@ export const signup = async (req, res) => {
    })
   if(newUser){
     generateToken(newUser._id,res) //generateToken for jwt tokens
-    
+
    await newUser.save()
      res.status(201).json({
       message:"User registered succesfully",
