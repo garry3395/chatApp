@@ -1,6 +1,9 @@
+import { sendWelcomeEmail } from "../emails/emailHandlers.js";
+import { ENV } from "../lib/env.js";
 import { generateToken } from "../lib/utils.js";
 import { User } from "../models/User.js";
 import bcrypt from "bcryptjs"
+
 export const signup = async (req, res) => {
   const { fullname, email, password } = req.body;
 
@@ -32,8 +35,13 @@ export const signup = async (req, res) => {
     email,
     password:hashedPassword
    })
+
+
   if(newUser){
-    generateToken(newUser._id,res) //generateToken for jwt tokens
+    const savedUser=await newUser.save();
+
+
+    generateToken(savedUser._id,res) //generateToken for jwt tokens
 
    await newUser.save()
      res.status(201).json({
@@ -45,6 +53,18 @@ export const signup = async (req, res) => {
         profilePic:newUser.profilePic
       }
     })
+
+
+    try{ 
+      await sendWelcomeEmail(savedUser.email,savedUser.fullname,ENV.CLIENT_URL);
+
+      
+    }catch(error){
+      console.error("failed to send welcome email:",error)
+
+    }
+
+
   }
   else{
     return res.status(400).json({message:"signup not successful"
@@ -56,3 +76,4 @@ export const signup = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
