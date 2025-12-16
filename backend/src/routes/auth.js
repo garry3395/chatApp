@@ -12,8 +12,9 @@ router.get('/logout',(req,res)=>{
  
 router.get('/login',(req,res)=>{
   console.log("login route hit")  
-    res.send("login route hit") 
-
+  console.log(req.body)
+  res.send("login route hit") 
+    
 
 
 })
