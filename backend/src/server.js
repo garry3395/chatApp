@@ -1,4 +1,5 @@
 import express from 'express'
+import cookieParser from "cookie-parser"
 
 import authRoutes from './routes/auth.js'
 import messageRoutes from './routes/message.js'
@@ -11,7 +12,9 @@ const __dirname=path.resolve()
 //user workspace 
 
 app.use(express.json())
+app.use(cookieParser())
 app.use('/api/auth',authRoutes)
+
 app.use('/api/messages',messageRoutes)
 //now code for deployment 
 if(ENV.NODE_ENV==="production"){
@@ -21,6 +24,7 @@ if(ENV.NODE_ENV==="production"){
   })
 }
  
+
  
 const PORT=ENV.PORT||3000
 app.listen(PORT,()=>{
