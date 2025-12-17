@@ -9,7 +9,7 @@ export const sendWelcomeEmail=async(email,name,clientURL)=>{
     html:createWelcomeEmailTemplate(name,clientURL)
 
 
-
+//for welcome emial 
 
   })
   if(error){
