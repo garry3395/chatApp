@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import {axiosInstance} from "../lib/axios"
 import { toast } from "react-hot-toast";    
+import { useAuthStore } from "./useAuthStore.js";
 
 export const useChatStore= create((set,get)=>({
   allContacts:[],
@@ -22,7 +23,9 @@ toggleSound: () => {
 },
 
   setActiveTab:(tab)=>{set({activeTab:tab})},
-  setSeclectedUser:(selectedUser)=>{set({selectedUser})},
+  setSelectedUser:(selectedUser)=> set({ selectedUser }),
+
+  //setSeclectedUser:(selectedUser)=>{set({selectedUser})},
   getAllContacts:async()=>{
     set({isUserLoading:true})
     try {
@@ -61,7 +64,7 @@ toggleSound: () => {
   sendMessage: async (messageData) => {
     const { selectedUser, messages } = get();
     const { authUser } = useAuthStore.getState();
-
+     
     const tempId = `temp-${Date.now()}`;
              
     const optimisticMessage = {
