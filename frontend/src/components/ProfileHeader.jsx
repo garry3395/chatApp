@@ -3,7 +3,7 @@ import { LogOutIcon, VolumeOffIcon, Volume2Icon } from "lucide-react";
 import { useAuthStore } from "../store/useAuthStore";
 import { useChatStore } from "../store/useChatStore";
 
-const mouseClickSound = new Audio("/sounds/mouse-click.mp3");
+const mouseClickSound = new Audio("../sounds/mouse-click.mp3");
 
 function ProfileHeader() {
   const { logout, authUser, updateProfile } = useAuthStore();
@@ -58,7 +58,7 @@ function ProfileHeader() {
           {/* USERNAME & ONLINE TEXT */}
           <div>
             <h3 className="text-slate-200 font-medium text-base max-w-[180px] truncate">
-              {authUser.fullName}
+              {authUser.fullname}
             </h3>
 
             <p className="text-slate-400 text-xs">Online</p>
