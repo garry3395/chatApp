@@ -10,10 +10,17 @@ export const useChatStore= create((set,get)=>({
   selectedUser:null,
   isUsersLoadng:false,
   isMessagesLoading:false,
-  isSoundEnabled:localStorage.getItem("isSoundEnabled")===true,
+  /*isSoundEnabled:localStorage.getItem("isSoundEnabled")==="true",
   toggleSound:()=>{
     localStorage.setItem("isSoundEnabled",!get().isSoundEnabled)
-  },
+  },*/
+  isSoundEnabled: localStorage.getItem("isSoundEnabled") === "true",
+toggleSound: () => {
+  const newValue = !get().isSoundEnabled;
+  localStorage.setItem("isSoundEnabled", newValue);
+  set({ isSoundEnabled: newValue }); // Zustand store update bhi karna hoga
+},
+
   setActiveTab:(tab)=>{set({activeTab:tab})},
   setSeclectedUser:(selectedUser)=>{set({selectedUser})},
   getAllContacts:async()=>{
@@ -56,7 +63,7 @@ export const useChatStore= create((set,get)=>({
     const { authUser } = useAuthStore.getState();
 
     const tempId = `temp-${Date.now()}`;
-
+             
     const optimisticMessage = {
       _id: tempId,
       senderId: authUser._id,
