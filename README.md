@@ -137,8 +137,34 @@ Dark mode and theme customization.
 
 🤝 Contributing
 Pull requests are welcome. Please open an issue first to discuss changes.  
-![Login Page](frontend/realImages/login.png)
-![Chat Window](frontend/realImages/chat.png)
+## 🖼️ Screenshots
+
+Here are some visuals from the ChatApp interface:
+
+### 🔐 Login Page  
+![Login Page](frontend/realImages/Screenshot%202026-01-07%20152421.png)
+
+### 💬 Chat Window  
+![Chat Window](frontend/realImages/Screenshot%202026-01-07%20152608.png)
+
+### 📤 Photo Upload Feature  
+![Photo Upload](frontend/realImages/Screenshot%202026-01-07%20152622.png)
+
+### 📥 Offline Message View  
+![Offline Message](frontend/realImages/Screenshot%202026-01-07%20152837.png)
+
+### 📧 Resend Email Flow  
+![Resend Email](frontend/realImages/Screenshot%202026-01-07%20152857.png)
+
+### 🧑‍💻 Developer Panel  
+![Developer Panel](frontend/realImages/Screenshot%202026-01-07%20153200.png)
+
+### 📱 WhatsApp-style UI  
+![WhatsApp UI](frontend/realImages/WhatsApp%20Image%202026-01-07%20at%2011.00.26%20AM.jpeg)
+
+### 📱 WhatsApp UI (Alt)  
+![WhatsApp UI Alt](frontend/realImages/WhatsApp%20Image%202026-01-07%20at%2011.00.26%20AM%20(1).jpeg)
+
 go to frontend and see images there in folder name "realImages"
 
 
