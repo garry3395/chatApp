@@ -9,7 +9,6 @@ import { ENV } from './lib/env.js'
 import {app, server} from './lib/socket.js'
 const __dirname=path.resolve()
 
-//user workspace 
 
 app.use(express.json({ limit: "10mb" }))
 app.use(cookieParser())
