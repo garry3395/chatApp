@@ -1,27 +1,22 @@
-ChatApp – A Modern Real‑Time Messaging Platform
-📝 Overview
-ChatApp is a modern, full‑stack real‑time messaging application inspired by WhatsApp. It allows users to chat both online and offline, send photos, and experience a smooth, responsive interface built with the latest technologies. While video and voice calling are not included in this version, the app focuses on delivering a robust and secure messaging experience with cutting‑edge tools and frameworks.
+# 💬 ChatApp – A Modern Real‑Time Messaging Platform
 
-This project is designed to showcase how a developer can combine React, Node.js, Express, MongoDB, Zustand, Tailwind CSS, JWT, Cloudinary, Arcjet, and rate‑limiting APIs into a cohesive, production‑ready chat application. It emphasizes scalability, security, and user experience.
+## 📝 Overview
+ChatApp is a modern, full‑stack real‑time messaging application inspired by WhatsApp.  
+It supports **online + offline chatting**, **photo sharing**, and **resend email functionality** 📧.  
+The app is designed with the latest technologies to ensure scalability, security, and a smooth user experience 🌟.
 
-🚀 Key Features
-Real‑time messaging with online and offline support.
+---
 
-Photo sharing via Cloudinary API integration.
+## 🚀 Key Features
+- ⚡ Real‑time messaging (online + offline)
+- 🖼️ Photo sharing via Cloudinary API
+- 📧 Resend Email functionality for account recovery
+- 🔐 JWT Authentication & Authorization
+- 🛡️ Arcjet integration + Rate limiting
+- 🧠 State management with Zustand
+- 🎨 Responsive UI with Tailwind CSS
+- 🗄️ Database powered by MongoDB + Mongoose
 
-Authentication & Authorization using JWT tokens.
-
-State management with Zustand (instead of Redux).
-
-Rate limiting to prevent abuse and ensure fair usage.
-
-Secure backend with Express.js  and Arcjet integration.
-
-Responsive UI designed with Tailwind CSS.
-
-Database powered by MongoDB and Mongoose.
-
-Modern architecture with separation of concerns between frontend and backend.
 📐 Architecture
 The app follows a client‑server architecture:
 
@@ -142,7 +137,9 @@ Dark mode and theme customization.
 
 🤝 Contributing
 Pull requests are welcome. Please open an issue first to discuss changes.  
-
+![Login Page](frontend/realImages/login.png)
+![Chat Window](frontend/realImages/chat.png)
+go to frontend and see images there in folder name "realImages"
 
 
 
