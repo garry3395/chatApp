@@ -70,7 +70,7 @@ MongoDB installed locally or cloud instance (MongoDB Atlas)
 
 Cloudinary account for media storage
 # Clone the repository
-git clone https://github.com/username/chatapp.git
+git clone https://github.com/garry3395/chatapp.git
 
 # Navigate into the project
 cd chatapp
