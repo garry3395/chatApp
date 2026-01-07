@@ -38,6 +38,8 @@ Uses JWT tokens for secure session management.
 
 Database (MongoDB + Mongoose)
 
+Resend Eamils  for sending image to client 
+
 Stores user profiles, chat history, and media references.
 
 Schema designed for scalability and quick queries.
@@ -153,16 +155,16 @@ Here are some visuals from the ChatApp interface:
 ### 📥 Offline Message View  
 ![Offline Message](frontend/realImages/Screenshot%202026-01-07%20152837.png)
 
-### 📧 Resend Email Flow  
+### UI
 ![Resend Email](frontend/realImages/Screenshot%202026-01-07%20152857.png)
 
 ### 🧑‍💻 Developer Panel  
 ![Developer Panel](frontend/realImages/Screenshot%202026-01-07%20153200.png)
 
-### 📱 WhatsApp-style UI  
+ ### 📧 Resend Email Flow  
 ![WhatsApp UI](frontend/realImages/WhatsApp%20Image%202026-01-07%20at%2011.00.26%20AM.jpeg)
 
-### 📱 WhatsApp UI (Alt)  
+### 📧 Resend Email Flow  
 ![WhatsApp UI Alt](frontend/realImages/WhatsApp%20Image%202026-01-07%20at%2011.00.26%20AM%20(1).jpeg)
 
 go to frontend and see images there in folder name "realImages"
