@@ -85,6 +85,7 @@ function MessageInput() {
           className="hidden"
         />
          {/** add vedio in future */}
+        
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}

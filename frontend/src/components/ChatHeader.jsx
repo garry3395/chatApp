@@ -36,7 +36,7 @@ function ChatHeader() {
           <p className="text-slate-400 text-sm">{isOnline ? "Online" : "Offline"}</p>
         </div>
       </div>
-
+        {/** in future vedio call option also brother */}
       <button onClick={() => setSelectedUser(null)}>
         <XIcon className="w-5 h-5 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer" />
       </button>
