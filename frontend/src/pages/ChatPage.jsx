@@ -12,10 +12,10 @@ function ChatPage() {
   const { activeTab, selectedUser } = useChatStore();
 
   return (
-    <div className="relative w-full max-w-6xl h-[800px]">
+    <div className="relative w-full sm:h-80  sm:w-full md:h-[600px] lg:max-w-6xl md:max-w-6xl h-[600px]">
       <BorderAnimatedContainer>
-        {/* LEFT SIDE */}
-        <div className="w-80 bg-slate-800/50 backdrop-blur-sm flex flex-col">
+        {/* LEFT SIDE  edr  kya karna hai ki idr dropdown lai ana hai for small screem */}
+        <div className="w-80  bg-slate-800/50 backdrop-blur-sm flex flex-col">
           <ProfileHeader />
           <ActiveTabSwitch />
 
