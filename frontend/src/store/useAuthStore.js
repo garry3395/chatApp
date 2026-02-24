@@ -14,6 +14,7 @@ export const useAuthStore = create((set,get) => ({
   updateProfileImage:false,
   socket:null,
   onlineUsers:[],
+  incomingCall: null,
   checkAuth:async ()=>{
      try {
       const res=await axiosInstance.get("/auth/check")
@@ -88,27 +89,48 @@ try {
       set({ updateProfileImage: false });
     }
   },
-  connectSocket: () => {
-    const { authUser } = get();
-    if (!authUser || get().socket?.connected) return;
+connectSocket: () => {
+  const { authUser, socket } = get();
 
-    const socket = io(BASE_URL, {
-      withCredentials: true, // this ensures cookies are sent with the connection
-    });
+  if (!authUser) return;
 
-    socket.connect();
+  // If socket already exists, don't create again
+  if (socket) return;
 
-    set({ socket });
+  const newSocket = io(BASE_URL, {
+    withCredentials: true,
+    transports: ["websocket"],
+  });
 
-    // listen for online users event
-    socket.on("getOnlineUsers", (userIds) => {
-      set({ onlineUsers: userIds });
-    });
-  },
+  newSocket.on("connect", () => {
+    console.log("Socket connected:", newSocket.id);
+  });
 
-  disconnectSocket: () => {
-    if (get().socket?.connected) get().socket.disconnect();
+  newSocket.on("disconnect", () => {
+    console.log("Socket disconnected");
+  });
+
+  newSocket.on("getOnlineUsers", (userIds) => {
+    set({ onlineUsers: userIds });
+  });
+
+  
+  newSocket.on("incomingCall", (data) => {
+    console.log("Incoming call received:", data);
+    set({ incomingCall: data });
+  });
+
+  set({ socket: newSocket });
+},
+
+disconnectSocket: () => {
+  const { socket } = get();
+
+  if (socket) {
+    socket.disconnect();
+    set({ socket: null });
   }
+},
 
   
 

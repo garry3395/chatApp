@@ -1,41 +1,73 @@
-import {Server} from 'socket.io';
-import http from 'http';
-import express from 'express';
-import {ENV} from './env.js';
-import { socketAuthMiddleware } from '../middleware/socket.auth.middleware.js';
-const app=express();
-const server=http.createServer(app);
-const io=new Server(server,{
-  cors:{
-    origin:[ENV.CLIENT_URL],
-    credentials:true
-  }
-})
+import { Server } from "socket.io";
+import http from "http";
+import express from "express";
+import { socketAuthMiddleware } from "../middleware/socket.auth.middleware.js";
+import { ENV } from "./env.js";
 
-io.use(socketAuthMiddleware)
-// we will use this function to check if the user is online or not
-export function getReceiverSocketId(userId) {
+export const app = express();
+export const server = http.createServer(app);
+
+export const io = new Server(server, {
+  cors: {
+    origin: ENV.CLIENT_URL,
+    credentials: true,
+  },
+});
+
+const userSocketMap = {};
+
+export const getReceiverSocketId = (userId) => {
   return userSocketMap[userId];
-}
+};
 
-// this is for storig online users
-const userSocketMap = {}; // {userId:socketId}
+io.use(socketAuthMiddleware);
 
 io.on("connection", (socket) => {
-  console.log("A user connected", socket.user.fullname);
-
   const userId = socket.userId;
+
   userSocketMap[userId] = socket.id;
 
-  // io.emit() is used to send events to all connected clients
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-  // with socket.on we listen for events from clients
+  socket.on("callUser", ({ to, offer }) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("incomingCall", {
+        from: userId,
+        offer,
+      });
+    }
+  });
+
+  socket.on("answerCall", ({ to, answer }) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("callAccepted", {
+        from: userId,
+        answer,
+      });
+    }
+  });
+
+  socket.on("iceCandidate", ({ to, candidate }) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("iceCandidate", {
+        from: userId,
+        candidate,
+      });
+    }
+  });
+
+  socket.on("endCall", ({ to }) => {
+    const receiverSocketId = userSocketMap[to];
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("callEnded");
+    }
+  });
+
   socket.on("disconnect", () => {
-    console.log("A user disconnected", socket.user.fullname);
     delete userSocketMap[userId];
     io.emit("getOnlineUsers", Object.keys(userSocketMap));
   });
 });
-
-export { io, app, server };

@@ -88,7 +88,7 @@ toggleSound: () => {
       toast.error(error.response?.data?.message || "Something went wrong");
     }
   },
-
+/* 
   subscribeToMessages: () => {
     const { selectedUser, isSoundEnabled } = get();
     if (!selectedUser) return;
@@ -109,12 +109,36 @@ toggleSound: () => {
         notificationSound.play().catch((e) => console.log("Audio play failed:", e));
       }
     });
-  },
+  }, */
+  subscribeToMessages: () => {
+  const { selectedUser, isSoundEnabled } = get();
+  if (!selectedUser) return;
 
-  unsubscribeFromMessages: () => {
-    const socket = useAuthStore.getState().socket;
-    socket.off("newMessage");
-  },
+  const socket = useAuthStore.getState().socket;
+  if (!socket) return;
+
+  socket.off("newMessage"); // ✅ remove previous listener
+
+  socket.on("newMessage", (newMessage) => {
+    const isMessageSentFromSelectedUser =
+      newMessage.senderId === selectedUser._id;
+
+    if (!isMessageSentFromSelectedUser) return;
+
+    set({ messages: [...get().messages, newMessage] });
+
+    if (isSoundEnabled) {
+      const notificationSound = new Audio("/sounds/notification.mp3");
+      notificationSound.currentTime = 0;
+      notificationSound.play().catch(() => {});
+    }
+  });
+},
+unsubscribeFromMessages: () => {
+  const socket = useAuthStore.getState().socket;
+  if (!socket) return;
+  socket.off("newMessage");
+}
 
 
 
