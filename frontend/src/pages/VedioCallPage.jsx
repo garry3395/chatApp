@@ -10,100 +10,86 @@ export default function VideoCallPage() {
   const { selectedUser } = useChatStore();
   const socket = useAuthStore((state) => state.socket);
 
-  const [stream, setStream] = useState(null);
-  const streamRef = useRef(null); // Fix: Use ref to access latest stream inside socket events
-  
-  const [isMuted, setIsMuted] = useState(false);
-  const [isVideoOff, setIsVideoOff] = useState(false);
-  const [isFrontCamera, setIsFrontCamera] = useState(true);
-  const [isSwapped, setIsSwapped] = useState(false);
-  const [callStatus, setCallStatus] = useState("idle");
-
   const localVideoRef = useRef(null);
   const remoteVideoRef = useRef(null);
-  const peerConnectionRef = useRef(null);
-  const callTimeoutRef = useRef(null);
-  const iceQueueRef = useRef([]); // Fix: Queue ICE candidates until connection is ready
+  const peerRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const iceQueueRef = useRef([]);
 
-  const getMedia = useCallback(async (facingMode = "user") => {
+  const [callStatus, setCallStatus] = useState("idle");
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+  const [isFront, setIsFront] = useState(true);
+
+  // ---------------- GET MEDIA ----------------
+
+  const getMedia = useCallback(async () => {
     try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode },
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: isFront ? "user" : "environment" },
         audio: true,
       });
 
-      setStream(mediaStream);
-      streamRef.current = mediaStream;
+      localStreamRef.current = stream;
 
       if (localVideoRef.current) {
-        localVideoRef.current.srcObject = mediaStream;
+        localVideoRef.current.srcObject = stream;
       }
-      
-      return mediaStream; // Fix: Return stream so it can be used immediately
+
+      return stream;
     } catch (err) {
-      console.error(err);
-      alert("Camera/Mic permission denied");
+      alert("Camera / Mic permission denied");
       return null;
     }
-  }, []);
+  }, [isFront]);
 
-  // Initialize camera on load
-  useEffect(() => {
-    getMedia(isFrontCamera ? "user" : "environment");
-    
-    // Cleanup camera when leaving the page
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, [isFrontCamera, getMedia]);
+  // ---------------- CREATE PEER ----------------
 
-  const createPeerConnection = () => {
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-    }
-
+  const createPeer = () => {
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     });
 
-    pc.onicecandidate = (event) => {
-      console.log("Generated ICE candidate");
-      if (event.candidate && selectedUser) {
-        socket?.emit("iceCandidate", {
+    pc.onicecandidate = (e) => {
+      if (e.candidate && selectedUser) {
+        socket.emit("iceCandidate", {
           to: selectedUser._id,
-          candidate: event.candidate,
+          candidate: e.candidate,
         });
       }
     };
 
-    pc.ontrack = (event) => {
-      console.log("Remote stream received:", event.streams);
+    pc.ontrack = (e) => {
+      console.log("Remote stream received");
+
       if (remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = event.streams[0];
+        remoteVideoRef.current.srcObject = e.streams[0];
+
+        remoteVideoRef.current.onloadedmetadata = () => {
+          remoteVideoRef.current.play();
+        };
       }
     };
 
-    peerConnectionRef.current = pc;
+    peerRef.current = pc;
     return pc;
   };
 
+  // ---------------- START CALL ----------------
+
   const startCall = async () => {
     if (!selectedUser || !socket) return;
-    
-    // Ensure we have media before calling
-    let currentStream = streamRef.current || await getMedia();
-    if (!currentStream) return; 
-
-    if (callStatus !== "idle") return;
 
     setCallStatus("calling");
 
-    const pc = createPeerConnection();
-    
-    // Add tracks BEFORE creating the offer
-    currentStream.getTracks().forEach((track) => pc.addTrack(track, currentStream));
+    const stream = localStreamRef.current || (await getMedia());
+    if (!stream) return;
+
+    const pc = createPeer();
+
+    stream.getTracks().forEach((track) => {
+      pc.addTrack(track, stream);
+    });
 
     const offer = await pc.createOffer();
     await pc.setLocalDescription(offer);
@@ -112,70 +98,59 @@ export default function VideoCallPage() {
       to: selectedUser._id,
       offer,
     });
-
-    callTimeoutRef.current = setTimeout(() => {
-      if (callStatus !== "connected") {
-        alert("Call Failed / No Answer");
-        cleanupCall();
-        navigate("/");
-      }
-    }, 30000);
   };
+
+  // ---------------- SOCKET EVENTS ----------------
 
   useEffect(() => {
     if (!socket) return;
 
     const handleIncomingCall = async ({ from, offer }) => {
       setCallStatus("connecting");
-      
-      let currentStream = streamRef.current || await getMedia();
-      const pc = createPeerConnection();
-      
-      // Fix: Add tracks using the immediately available local variable
-      if (currentStream) {
-        currentStream.getTracks().forEach((track) => pc.addTrack(track, currentStream));
-      }
+
+      const stream = localStreamRef.current || (await getMedia());
+      const pc = createPeer();
+
+      stream.getTracks().forEach((track) => {
+        pc.addTrack(track, stream);
+      });
 
       await pc.setRemoteDescription(new RTCSessionDescription(offer));
 
-      // Process any queued ICE candidates that arrived early
-      while (iceQueueRef.current.length > 0) {
-        const candidate = iceQueueRef.current.shift();
-        await pc.addIceCandidate(new RTCIceCandidate(candidate)).catch(console.error);
+      // Add queued ICE
+      for (const candidate of iceQueueRef.current) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
       }
+      iceQueueRef.current = [];
 
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
       socket.emit("answerCall", { to: from, answer });
+
+      setCallStatus("connected");
     };
 
     const handleCallAccepted = async ({ answer }) => {
-      if (peerConnectionRef.current) {
-        await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(answer));
-        setCallStatus("connected");
-        clearTimeout(callTimeoutRef.current);
-      }
+      const pc = peerRef.current;
+      if (!pc) return;
+
+      await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      setCallStatus("connected");
     };
 
     const handleIceCandidate = async ({ candidate }) => {
-      console.log("Received ICE candidate");
-      const pc = peerConnectionRef.current;
-      
-      try {
-        if (pc && pc.remoteDescription) {
-          await pc.addIceCandidate(new RTCIceCandidate(candidate));
-        } else {
-          // Fix: If remote description isn't ready, save candidate for later
-          iceQueueRef.current.push(candidate);
-        }
-      } catch (err) {
-        console.log("ICE error", err);
+      const pc = peerRef.current;
+
+      if (pc && pc.remoteDescription) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      } else {
+        iceQueueRef.current.push(candidate);
       }
     };
 
     const handleCallEnded = () => {
-      cleanupCall();
+      cleanup();
       navigate("/");
     };
 
@@ -190,62 +165,64 @@ export default function VideoCallPage() {
       socket.off("iceCandidate", handleIceCandidate);
       socket.off("callEnded", handleCallEnded);
     };
-  }, [socket]); // Fix: Removed `stream` from dependency array so listeners aren't dropped
+  }, [socket]);
 
-  const cleanupCall = () => {
-    clearTimeout(callTimeoutRef.current);
+  // ---------------- CLEANUP ----------------
 
-    if (peerConnectionRef.current) {
-      peerConnectionRef.current.close();
-      peerConnectionRef.current = null;
+  const cleanup = () => {
+    if (peerRef.current) {
+      peerRef.current.close();
+      peerRef.current = null;
     }
 
-    iceQueueRef.current = []; // Empty the queue
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach((t) => t.stop());
+      localStreamRef.current = null;
     }
 
+    iceQueueRef.current = [];
     setCallStatus("idle");
-    setStream(null);
-    streamRef.current = null;
   };
 
   const endCall = () => {
-    socket?.emit("endCall", { to: selectedUser?._id });
-    cleanupCall();
+    socket.emit("endCall", { to: selectedUser?._id });
+    cleanup();
     navigate("/");
   };
 
+  // ---------------- CONTROLS ----------------
+
   const toggleMute = () => {
-    if (streamRef.current) {
-      streamRef.current.getAudioTracks().forEach((track) => {
-        track.enabled = isMuted; // Toggle opposite of current state
-      });
-      setIsMuted(!isMuted);
-    }
+    localStreamRef.current?.getAudioTracks().forEach((t) => {
+      t.enabled = !t.enabled;
+    });
+    setIsMuted((prev) => !prev);
   };
 
   const toggleVideo = () => {
-    if (streamRef.current) {
-      streamRef.current.getVideoTracks().forEach((track) => {
-        track.enabled = isVideoOff; // Toggle opposite of current state
-      });
-      setIsVideoOff(!isVideoOff);
-    }
+    localStreamRef.current?.getVideoTracks().forEach((t) => {
+      t.enabled = !t.enabled;
+    });
+    setIsVideoOff((prev) => !prev);
   };
+
+  // ---------------- UI ----------------
 
   return (
     <div className="relative h-screen w-full bg-black text-white">
-      {callStatus === "connected" ? (
-        <video
-          ref={isSwapped ? localVideoRef : remoteVideoRef}
-          autoPlay
-          playsInline
-          muted={isSwapped}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      ) : (
+
+      {/* REMOTE VIDEO ALWAYS MOUNTED */}
+      <video
+        ref={remoteVideoRef}
+        autoPlay
+        playsInline
+        className={`absolute inset-0 w-full h-full object-cover ${
+          callStatus === "connected" ? "block" : "hidden"
+        }`}
+      />
+
+      {/* STATUS SCREEN */}
+      {callStatus !== "connected" && (
         <div className="absolute inset-0 flex items-center justify-center text-2xl">
           {callStatus === "calling" && "📞 Ringing..."}
           {callStatus === "connecting" && "🔄 Connecting..."}
@@ -253,26 +230,27 @@ export default function VideoCallPage() {
         </div>
       )}
 
+      {/* LOCAL VIDEO SMALL BOX */}
       <motion.div
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setIsSwapped(!isSwapped)}
-        className="absolute top-4 right-4 w-32 h-48 rounded-2xl overflow-hidden border z-10 cursor-pointer bg-gray-900"
+        className="absolute top-4 right-4 w-32 h-48 rounded-2xl overflow-hidden border z-10 bg-gray-900"
       >
         <video
-          ref={isSwapped ? remoteVideoRef : localVideoRef}
+          ref={localVideoRef}
           autoPlay
           playsInline
-          muted={!isSwapped}
+          muted
           className="w-full h-full object-cover scale-x-[-1]"
         />
       </motion.div>
 
+      {/* CONTROLS */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-6 bg-white/10 backdrop-blur-xl px-6 py-3 rounded-full z-10">
-        <button onClick={toggleMute} className={`p-3 rounded-full ${isMuted ? 'bg-red-500' : 'bg-transparent'}`}>
+
+        <button onClick={toggleMute}>
           {isMuted ? <MicOff /> : <Mic />}
         </button>
 
-        <button onClick={toggleVideo} className={`p-3 rounded-full ${isVideoOff ? 'bg-red-500' : 'bg-transparent'}`}>
+        <button onClick={toggleVideo}>
           {isVideoOff ? <VideoOff /> : <Video />}
         </button>
 
@@ -286,15 +264,13 @@ export default function VideoCallPage() {
           </button>
         )}
 
-        <button onClick={() => setIsFrontCamera(!isFrontCamera)}>
+        <button onClick={() => setIsFront(!isFront)}>
           <RefreshCw />
         </button>
       </div>
     </div>
   );
 }
-
-
 /*  import React, { useEffect, useRef, useState, useCallback } from "react";
 import { Mic, MicOff, Video, VideoOff, PhoneOff, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
