@@ -13,21 +13,18 @@ const __dirname = path.resolve();
 
 // middleware
 app.use(express.json({ limit: "10mb" }));
-
-app.use(cors({ origin: ENV.CLIENT_URL, credentials: true }));
 app.use(cookieParser());
+app.use(cors({ 
+  origin: ENV.CLIENT_URL, 
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 // routes
 app.use("/api/auth", authRoutes);
 app.use("/api/messages", messageRoutes);
 
-// production build
-/* if (ENV.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
-  });
-}
- */
+
 const PORT = ENV.PORT || 3000;
 
 server.listen(PORT, () => {

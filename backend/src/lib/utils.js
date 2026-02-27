@@ -9,11 +9,9 @@ dotenv.config();
   res.cookie('jwt',token,{
     maxAge:7*24*60*60*1000,
     httpOnly:true,
-    sameSite:'lax',
-    secure:ENV.NODE_ENV==='development'?false:true,
-
-   
-
+    sameSite: ENV.NODE_ENV === 'production' ? 'none' : 'lax',
+    secure: ENV.NODE_ENV === 'production' ? true : false,
+    domain: ENV.NODE_ENV === 'production' ? '.onrender.com' : undefined
   })
  
   return token;
