@@ -29,25 +29,27 @@ io.on("connection", (socket) => {
 
   io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
-  socket.on("callUser", ({ to, offer }) => {
-    const receiverSocketId = userSocketMap[to];
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("incomingCall", {
-        from: userId,
-        offer,
-      });
-    }
-  });
+  socket.on("callUser", ({ to, offer, callType }) => {
+  const receiverSocketId = userSocketMap[to];
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("incomingCall", {
+      from: userId,
+      offer,
+      callType,
+    });
+  }
+});
 
-  socket.on("answerCall", ({ to, answer }) => {
-    const receiverSocketId = userSocketMap[to];
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("callAccepted", {
-        from: userId,
-        answer,
-      });
-    }
-  });
+socket.on("answerCall", ({ to, answer, callType }) => {
+  const receiverSocketId = userSocketMap[to];
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("callAccepted", {
+      from: userId,
+      answer,
+      callType,
+    });
+  }
+});
 
   socket.on("iceCandidate", ({ to, candidate }) => {
     const receiverSocketId = userSocketMap[to];
